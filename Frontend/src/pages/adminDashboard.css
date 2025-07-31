@@ -1,0 +1,193 @@
+/* General Reset */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f0f2f5; 
+}
+
+/* Admin Dashboard Container */
+.admin-dashboard-container {
+    padding: 2rem;
+    text-align: center;
+}
+
+/* Admin Info Section */
+.admin-info {
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    max-width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Info Text */
+.admin-info p {
+    margin: 0.5rem 0;
+    line-height: 1.5;
+    color: #555;
+    text-align: left;
+}
+
+/* Table Styles */
+.table {
+    width: 80%;
+    margin: 1rem auto;
+    border-collapse: collapse;
+    background-color: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.table th,
+.table td {
+    padding: 1rem;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.table th {
+    background-color: #007bff;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.table tr:nth-child(even) {
+    background-color: #f9f9f9; 
+}
+
+.table tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Action Buttons */
+.table td button {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+.table td button:hover {
+    transform: translateY(-2px);
+}
+
+/* Button Colors */
+.table td .btn-primary {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.table td .btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.table td .btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.table td .btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.table td .btn-secondary {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.table td .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .admin-dashboard-container {
+        padding: 1rem;
+    }
+
+    .table {
+        width: 95%;
+    }
+
+    .admin-info {
+        max-width: 95%;
+        padding: 1rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem;
+    }
+}
+
+
+
+/* Align Buttons in a Row */
+.table td:nth-child(5) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: nowrap; /* Prevent buttons from wrapping to a new line */
+}
+
+/* Button Styling */
+.table td button {
+    padding: 0.3rem 1rem; /* Reduce padding for smaller buttons */
+    font-size: 0.8rem; /* Smaller font size */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background-color 0.3s ease-in-out;
+    height: auto; /* Ensure the height adjusts automatically */
+    line-height: 1; /* Reduce line spacing inside buttons */
+    white-space: nowrap;
+}
+
+.table td button:hover {
+    transform: translateY(-2px);
+}
+
+/* Button Colors */
+.table td .btn-primary {
+    background-color: #007bff;
+    color: #ffffff;
+}
+
+.table td .btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.table td .btn-warning {
+    background-color: #fc6565;
+    color: #ffffff;
+}
+
+.table td .btn-warning:hover {
+    background-color: #fc6565;
+}
+
+.table td .btn-secondary {
+    background-color: #6c757d;
+    color: #ffffff;
+}
+
+.table td .btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+/* Highlight flagged row */
+.flagged-row {
+    background-color: #ff4a4a !important; /* Light red background */
+}
+
+.flagged-row:hover {
+    background-color: #ff9999 !important; /* Darker red on hover */
+}
+
