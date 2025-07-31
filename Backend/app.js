@@ -9,7 +9,6 @@ const supervisorRoutes = require("./Routes/supervisor");
 const timesheetRoutes = require("./Routes/timesheet");
 const adminRoutes = require("./Routes/admin");
 
-dotenv.config(); 
 
 const app = express();
 
