@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./adminDashboard.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { getApprovedTimesheets } from "../utils/request";
 
 
 export default function AdminDashboardPage({ loggedInUser }) {
@@ -33,20 +34,16 @@ export default function AdminDashboardPage({ loggedInUser }) {
     }, [loggedInUser]);
 
     useEffect(() => {
-        const getApprovedTimesheets = async () => {
+        const fetchTimesheets = async () => {
             try {
-                const response = await fetch("http://localhost:3000/admin/timesheets/approved");
-                if (!response.ok) {
-                    throw new Error("Failed to fetch approved timesheets.");
-                }
-                const data = await response.json();
-                setApprovedTimesheets(data);
+                const data = await getApprovedTimesheets();  
+                setApprovedTimesheets(data);             
             } catch (error) {
                 console.error("Error fetching approved timesheets:", error);
             }
         };
 
-        getApprovedTimesheets();
+        fetchTimesheets();
     }, []);
 
     const handleSendToPayroll = (timesheetId) => {

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./login.css"; 
 import { useNavigate } from "react-router-dom";
-
+import { login } from "../utils/request";
 
 function Login({ setLoggedInUser }) {
     const [employeeId, setEmployeeId] = useState("");
@@ -12,21 +12,14 @@ function Login({ setLoggedInUser }) {
         event.preventDefault();
         console.log("Sending login request with:", { employeeId, password });
 
-        try {
-            const response = await fetch("http://localhost:3000/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ employeeId, password }),
-                credentials: "include",
-            });
+       try {
+            const data = await login(employeeId, password); // ✅ use helper
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                alert(errorData.error || "Login failed");
+            if (data.error) {
+                alert(data.error || "Login failed");
                 return;
             }
 
-            const data = await response.json(); // Fetching JSON response
             console.log("Login successful. Redirecting to:", data);
 
             // Save user to localStorage

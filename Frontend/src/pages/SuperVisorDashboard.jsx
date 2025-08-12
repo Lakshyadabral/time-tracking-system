@@ -3,9 +3,15 @@ import { useNavigate } from "react-router-dom";
 import "./supervisorDashboard.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./employeeDashboard.css";
+import {
+    getSupervisorTimesheets,
+    toggleApproval as toggleApprovalAPI,
+    bulkApprove,
+    sendToAdmin,
+} from "../utils/request";
 
 export default function SupervisorDashboardPage({ loggedInUser }) {
-    const [supervisorInfo, setSupervisorInfo] = useState(null); // Store supervisor info
+    const [supervisorInfo, setSupervisorInfo] = useState(null);
     const [employeeTimesheets, setEmployeeTimesheets] = useState([]);
     const navigate = useNavigate();
 
@@ -13,9 +19,8 @@ export default function SupervisorDashboardPage({ loggedInUser }) {
         const storedSupervisorId = sessionStorage.getItem("supervisorId");
 
         if (!storedSupervisorId && loggedInUser?.role === "supervisor") {
-            // Save supervisor info for the current session
             sessionStorage.setItem("supervisorId", loggedInUser.employeeId);
-            setSupervisorInfo(loggedInUser); // Store all logged-in user details
+            setSupervisorInfo(loggedInUser);
         } else if (storedSupervisorId) {
             setSupervisorInfo({
                 name: loggedInUser?.name || "N/A",
@@ -31,29 +36,19 @@ export default function SupervisorDashboardPage({ loggedInUser }) {
         const getTimesheets = async () => {
             try {
                 if (supervisorInfo?.employeeId) {
-                    const response = await fetch(
-                        `http://localhost:3000/supervisor/timesheets/${supervisorInfo.employeeId}`
-                    );
-                    if (!response.ok) {
-                        throw new Error("Failed to fetch timesheets.");
-                    }
-                    const data = await response.json();
+                    const data = await getSupervisorTimesheets(supervisorInfo.employeeId);
 
                     const timesheetsWithTotalHours = data.timesheets.map((timesheet) => {
-                        const totalHoursInMinutes = timesheet.hours.reduce((acc, entry) => {
-                            const [hours, minutes] = entry.hoursWorked
-                                ? entry.hoursWorked.split(":").map(Number)
-                                : [0, 0];
-                            return acc + hours * 60 + minutes;
+                        const totalMinutes = timesheet.hours.reduce((acc, entry) => {
+                            const [h, m] = entry.hoursWorked?.split(":").map(Number) || [0, 0];
+                            return acc + h * 60 + m;
                         }, 0);
 
-                        const hours = Math.floor(totalHoursInMinutes / 60);
-                        const minutes = totalHoursInMinutes % 60;
+                        const hours = Math.floor(totalMinutes / 60);
+                        const minutes = totalMinutes % 60;
                         const totalHours = `${hours}:${minutes.toString().padStart(2, "0")}`;
-                        return {
-                            ...timesheet,
-                            totalHours,
-                        };
+
+                        return { ...timesheet, totalHours };
                     });
 
                     setEmployeeTimesheets(timesheetsWithTotalHours);
@@ -65,33 +60,20 @@ export default function SupervisorDashboardPage({ loggedInUser }) {
 
         getTimesheets();
     }, [supervisorInfo]);
+
     const toggleApproval = async (timesheetId, currentApproval) => {
         try {
-            const response = await fetch(
-                "http://localhost:3000/supervisor/timesheets/toggle-approve",
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ timesheetId, approved: !currentApproval }),
-                }
-            );
+            await toggleApprovalAPI(timesheetId);
 
-            if (response.ok) {
-                const updatedTimesheets = employeeTimesheets.map((timesheet) =>
-                    timesheet._id === timesheetId
-                        ? {
-                              ...timesheet,
-                              hours: timesheet.hours.map((entry) => ({
-                                  ...entry,
-                                  approved: !currentApproval,
-                              })),
-                          }
-                        : timesheet
-                );
-                setEmployeeTimesheets(updatedTimesheets);
-            } else {
-                alert("Failed to update approval status.");
-            }
+            const updated = employeeTimesheets.map((t) =>
+                t._id === timesheetId
+                    ? {
+                          ...t,
+                          hours: t.hours.map((e) => ({ ...e, approved: !currentApproval })),
+                      }
+                    : t
+            );
+            setEmployeeTimesheets(updated);
         } catch (err) {
             console.error("Error toggling approval:", err);
         }
@@ -99,55 +81,30 @@ export default function SupervisorDashboardPage({ loggedInUser }) {
 
     const handleApproveAll = async () => {
         try {
-            const response = await fetch(
-                "http://localhost:3000/supervisor/timesheets/approve-all",
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ supervisorId: loggedInUser.employeeId }),
-                }
-            );
+            await bulkApprove(loggedInUser.employeeId);
 
-            if (response.ok) {
-                const updatedTimesheets = employeeTimesheets.map((timesheet) => ({
-                    ...timesheet,
-                    hours: timesheet.hours.map((entry) => ({ ...entry, approved: true })),
-                }));
-                setEmployeeTimesheets(updatedTimesheets);
-                alert("All timesheets approved successfully!");
-            } else {
-                alert("Failed to approve all timesheets.");
-            }
+            const updated = employeeTimesheets.map((t) => ({
+                ...t,
+                hours: t.hours.map((e) => ({ ...e, approved: true })),
+            }));
+            setEmployeeTimesheets(updated);
+            alert("All timesheets approved successfully!");
         } catch (err) {
             console.error("Error approving all timesheets:", err);
+            alert("Failed to approve all timesheets.");
         }
     };
 
     const handleSendToAdmin = async () => {
         try {
-            const approvedTimesheets = employeeTimesheets.filter((timesheet) =>
-                timesheet.hours.every((entry) => entry.approved)
+            const approved = employeeTimesheets.filter((t) =>
+                t.hours.every((e) => e.approved)
             );
-
-            const response = await fetch(
-                "http://localhost:3000/supervisor/timesheets/send-to-admin",
-                {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        supervisorId: loggedInUser.employeeId,
-                        timesheets: approvedTimesheets,
-                    }),
-                }
-            );
-
-            if (response.ok) {
-                alert("Approved timesheets sent to Admin successfully!");
-            } else {
-                alert("Failed to send approved timesheets to Admin.");
-            }
+            await sendToAdmin(loggedInUser.employeeId, approved);
+            alert("Approved timesheets sent to Admin successfully!");
         } catch (err) {
-            console.error("Error sending approved timesheets to Admin:", err);
+            console.error("Error sending timesheets:", err);
+            alert("Failed to send approved timesheets to Admin.");
         }
     };
 
@@ -156,15 +113,9 @@ export default function SupervisorDashboardPage({ loggedInUser }) {
             <div className="employee-info">
                 <h2>Supervisor Information</h2>
                 <div>
-                    <p>
-                        <strong>Name:</strong> {loggedInUser.name || "N/A"}
-                    </p>
-                    <p>
-                        <strong>Role:</strong> {supervisorInfo?.role}
-                    </p>
-                    <p>
-                        <strong>Supervisor ID:</strong> {supervisorInfo?.employeeId}
-                    </p>
+                    <p><strong>Name:</strong> {loggedInUser.name || "N/A"}</p>
+                    <p><strong>Role:</strong> {supervisorInfo?.role}</p>
+                    <p><strong>Supervisor ID:</strong> {supervisorInfo?.employeeId}</p>
                 </div>
             </div>
 
@@ -186,18 +137,18 @@ export default function SupervisorDashboardPage({ loggedInUser }) {
                             <td>
                                 <button
                                     className={`btn ${
-                                        timesheet.hours.every((entry) => entry.approved)
+                                        timesheet.hours.every((e) => e.approved)
                                             ? "btn-danger"
                                             : "btn-success"
                                     } btn-sm`}
                                     onClick={() =>
                                         toggleApproval(
                                             timesheet._id,
-                                            timesheet.hours.every((entry) => entry.approved)
+                                            timesheet.hours.every((e) => e.approved)
                                         )
                                     }
                                 >
-                                    {timesheet.hours.every((entry) => entry.approved)
+                                    {timesheet.hours.every((e) => e.approved)
                                         ? "Unapprove"
                                         : "Approve"}
                                 </button>
@@ -211,12 +162,13 @@ export default function SupervisorDashboardPage({ loggedInUser }) {
                                 </button>
                             </td>
                             <td>
-                                {timesheet.hours.every((entry) => entry.approved) ? "Yes" : "No"}
+                                {timesheet.hours.every((e) => e.approved) ? "Yes" : "No"}
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
             <div className="actions text-center mt-4">
                 <button className="btn btn-success me-3" onClick={handleApproveAll}>
                     Approve All
