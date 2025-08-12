@@ -21,10 +21,9 @@ mongoose.connect(process.env.MONGO_URI, {
 
 // Enable CORS
 app.use(cors({
-  origin: "*", 
-  credentials: true,              
+  origin: "https://time-tracking-system-ochre.vercel.app",
+  credentials: true,
 }));
-
 // Middleware
 app.use(express.json());
 
